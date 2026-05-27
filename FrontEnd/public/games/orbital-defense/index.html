@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Orbital Defense - Sorzal Edition</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #020617; font-family: 'Staatliches', sans-serif; }
+        canvas { display: block; }
+        #ui {
+            position: absolute; top: 20px; left: 20px; color: #F59E0B;
+            text-transform: uppercase; letter-spacing: 2px; pointer-events: none;
+        }
+        .score-box { font-size: 24px; text-shadow: 0 0 10px #F59E0B; }
+        #game-over {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: #F59E0B; text-align: center; display: none; pointer-events: all;
+            background: rgba(0,0,0,0.9); padding: 40px; border-radius: 30px; border: 2px solid #F59E0B;
+        }
+        button {
+            background: #F59E0B; border: none; padding: 15px 30px; color: #020617;
+            font-size: 20px; cursor: pointer; border-radius: 10px; margin-top: 20px; font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        <div class="score-box">Integridad del Núcleo: <span id="health">100</span>%</div>
+        <div class="score-box">Meteoritos Desviados: <span id="score">0</span></div>
+    </div>
+    <div id="game-over">
+        <h1>NÚCLEO DESTRUIDO</h1>
+        <p>La red orbital ha colapsado.</p>
+        <button onclick="resetGame()">RECONSTRUIR</button>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const healthEl = document.getElementById('health');
+        const scoreEl = document.getElementById('score');
+        const gameOverEl = document.getElementById('game-over');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let score = 0;
+        let health = 100;
+        let gameActive = true;
+        let shields = [];
+        let debris = [];
+        const core = { x: canvas.width/2, y: canvas.height/2, r: 40 };
+        const orbitRadius = 120;
+
+        function spawnDebris() {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = Math.max(canvas.width, canvas.height);
+            debris.push({
+                x: core.x + Math.cos(angle) * dist,
+                y: core.y + Math.sin(angle) * dist,
+                vx: -Math.cos(angle) * (2 + score/20),
+                vy: -Math.sin(angle) * (2 + score/20),
+                r: 10 + Math.random() * 15
+            });
+        }
+
+        canvas.onclick = (e) => {
+            if (!gameActive) return;
+            const dx = e.clientX - core.x;
+            const dy = e.clientY - core.y;
+            const angle = Math.atan2(dy, dx);
+            
+            // Colocar escudo en esa dirección
+            shields.push({
+                angle: angle,
+                width: 0.6,
+                life: 100
+            });
+        };
+
+        function update() {
+            if (!gameActive) return;
+
+            if (Math.random() < 0.03 + (score/1000)) spawnDebris();
+
+            debris.forEach((d, i) => {
+                d.x += d.vx;
+                d.y += d.vy;
+
+                // Colisión con escudos
+                const distToCore = Math.sqrt((d.x - core.x)**2 + (d.y - core.y)**2);
+                if (distToCore < orbitRadius + 10 && distToCore > orbitRadius - 10) {
+                    const angle = Math.atan2(d.y - core.y, d.x - core.x);
+                    shields.forEach((s, si) => {
+                        let diff = Math.abs(angle - s.angle);
+                        if (diff > Math.PI) diff = Math.PI * 2 - diff;
+                        if (diff < s.width / 2) {
+                            debris.splice(i, 1);
+                            s.life -= 40;
+                            score++;
+                            scoreEl.innerText = score;
+                        }
+                    });
+                }
+
+                // Colisión con núcleo
+                if (distToCore < core.r) {
+                    debris.splice(i, 1);
+                    health -= 10;
+                    healthEl.innerText = health;
+                    if (health <= 0) endGame();
+                }
+            });
+
+            shields = shields.filter(s => {
+                s.life -= 0.5;
+                return s.life > 0;
+            });
+        }
+
+        function draw() {
+            ctx.fillStyle = '#020617';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Core
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#F59E0B';
+            ctx.fillStyle = '#F59E0B';
+            ctx.beginPath();
+            ctx.arc(core.x, core.y, core.r, 0, Math.PI*2);
+            ctx.fill();
+
+            // Orbit Path
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = 'rgba(245, 158, 11, 0.1)';
+            ctx.beginPath();
+            ctx.arc(core.x, core.y, orbitRadius, 0, Math.PI*2);
+            ctx.stroke();
+
+            // Shields
+            shields.forEach(s => {
+                ctx.strokeStyle = `rgba(245, 158, 11, ${s.life/100})`;
+                ctx.lineWidth = 15;
+                ctx.beginPath();
+                ctx.arc(core.x, core.y, orbitRadius, s.angle - s.width/2, s.angle + s.width/2);
+                ctx.stroke();
+            });
+
+            // Debris
+            ctx.fillStyle = '#475569';
+            debris.forEach(d => {
+                ctx.beginPath();
+                ctx.arc(d.x, d.y, d.r, 0, Math.PI*2);
+                ctx.fill();
+            });
+        }
+
+        function endGame() {
+            gameActive = false;
+            gameOverEl.style.display = 'block';
+        }
+
+        function resetGame() {
+            score = 0;
+            health = 100;
+            healthEl.innerText = health;
+            scoreEl.innerText = score;
+            debris = [];
+            shields = [];
+            gameActive = true;
+            gameOverEl.style.display = 'none';
+            loop();
+        }
+
+        function loop() {
+            if (!gameActive) return;
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+        window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    </script>
+</body>
+</html>

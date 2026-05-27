@@ -1,0 +1,20 @@
+{
+  "NAVBAR": {
+    "HOME": "Home",
+    "CATALOG": "Catalog",
+    "LOGIN": "Login",
+    "LOGOUT": "Logout",
+    "LOCATE_US": "Locate Us"
+  },
+  "HOME": {
+    "MAIN_TITLE": "SORZAL",
+    "SLOGAN": "The sky where everything fits",
+    "WHO_WE_ARE": "Who we are?",
+    "GET_STARTED": "Try Couples",
+    "GAMES": "Try Games"
+  },
+  "SUPPORT": {
+    "TITLE": "Support",
+    "PLACEHOLDER": "Type your message..."
+  }
+}

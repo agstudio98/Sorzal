@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Void Shift - Sorzal Edition</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@700&display=swap');
+        body { margin: 0; overflow: hidden; background: #0A0A15; font-family: 'Courier Prime', monospace; }
+        canvas { display: block; filter: contrast(120%) brightness(110%); }
+        #ui {
+            position: absolute; top: 20px; left: 20px; color: #A78BFA;
+            text-transform: uppercase; letter-spacing: 4px; pointer-events: none;
+            text-shadow: 2px 2px #000;
+        }
+        #game-over {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: #EF4444; text-align: center; display: none; pointer-events: all;
+            background: rgba(0,0,0,0.9); padding: 40px; border: 4px double #A78BFA;
+        }
+        button {
+            background: transparent; border: 2px solid #A78BFA; padding: 15px 30px; color: #A78BFA;
+            font-size: 20px; cursor: pointer; margin-top: 20px; font-family: 'Courier Prime', monospace;
+        }
+        button:hover { background: #A78BFA; color: #000; }
+        .glitch { animation: glitch 1s infinite; }
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        <div>Nivel de Vacío: <span id="score">0</span></div>
+    </div>
+    <div id="game-over">
+        <h1 class="glitch">ERROR DE DIMENSIÓN</h1>
+        <p>Tu frecuencia no coincidió con el muro.</p>
+        <button onclick="resetGame()">REBOOT SYSTEM</button>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        const gameOverEl = document.getElementById('game-over');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let score = 0;
+        let gameActive = true;
+        let gameSpeed = 6;
+        
+        // Colores de dimensiones (Morado y Cian)
+        const dims = ['#A78BFA', '#22D3EE'];
+        let currentDim = 0;
+
+        const player = {
+            x: 150,
+            y: canvas.height / 2,
+            size: 25,
+            trail: []
+        };
+
+        let walls = [];
+
+        function spawnWall() {
+            const dim = Math.floor(Math.random() * 2);
+            walls.push({
+                x: canvas.width + 100,
+                w: 60,
+                dim: dim,
+                color: dims[dim]
+            });
+        }
+
+        function shift() {
+            if (!gameActive) return;
+            currentDim = (currentDim + 1) % 2;
+        }
+
+        function update() {
+            if (!gameActive) return;
+
+            score += 0.1;
+            scoreEl.innerText = Math.floor(score);
+            gameSpeed = 6 + (score / 100);
+
+            // Spawn walls
+            if (walls.length === 0 || walls[walls.length-1].x < canvas.width - 400) {
+                spawnWall();
+            }
+
+            walls.forEach((w, i) => {
+                w.x -= gameSpeed;
+
+                // Colisión
+                if (w.x < player.x + player.size && w.x + w.w > player.x - player.size) {
+                    if (currentDim !== w.dim) {
+                        endGame();
+                    }
+                }
+
+                if (w.x + w.w < 0) walls.splice(i, 1);
+            });
+
+            // Player trail
+            player.trail.push({x: player.x, y: player.y, color: dims[currentDim]});
+            if (player.trail.length > 10) player.trail.shift();
+        }
+
+        function draw() {
+            // Fondo con scanlines
+            ctx.fillStyle = '#0A0A15';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+            for(let i=0; i<canvas.height; i+=4) {
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+            }
+
+            // Draw Walls
+            walls.forEach(w => {
+                ctx.fillStyle = w.color;
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = w.color;
+                ctx.fillRect(w.x, 0, w.w, canvas.height);
+                
+                // Efecto de patrón en el muro
+                ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+                for(let j=0; j<canvas.height; j+=20) {
+                    ctx.strokeRect(w.x + 5, j, w.w - 10, 10);
+                }
+            });
+
+            // Draw Trail
+            player.trail.forEach((t, i) => {
+                ctx.globalAlpha = i / 10;
+                ctx.fillStyle = t.color;
+                ctx.beginPath();
+                ctx.arc(t.x - (10-i)*5, t.y, player.size * (i/10), 0, Math.PI*2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+
+            // Draw Player
+            ctx.fillStyle = dims[currentDim];
+            ctx.shadowBlur = 30;
+            ctx.shadowColor = dims[currentDim];
+            
+            // Cuerpo de fantasma
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.size, Math.PI, 0);
+            ctx.lineTo(player.x + player.size, player.y + player.size);
+            ctx.lineTo(player.x + player.size/2, player.y + player.size/2);
+            ctx.lineTo(player.x, player.y + player.size);
+            ctx.lineTo(player.x - player.size/2, player.y + player.size/2);
+            ctx.lineTo(player.x - player.size, player.y + player.size);
+            ctx.closePath();
+            ctx.fill();
+
+            // Ojos
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(player.x - 8, player.y - 5, 4, 0, Math.PI*2);
+            ctx.arc(player.x + 8, player.y - 5, 4, 0, Math.PI*2);
+            ctx.fill();
+
+            ctx.shadowBlur = 0;
+        }
+
+        function endGame() {
+            gameActive = false;
+            gameOverEl.style.display = 'block';
+        }
+
+        function resetGame() {
+            score = 0;
+            walls = [];
+            gameActive = true;
+            gameOverEl.style.display = 'none';
+            loop();
+        }
+
+        window.addEventListener('keydown', e => { if(e.code === 'Space') shift(); });
+        window.addEventListener('mousedown', shift);
+
+        function loop() {
+            if (!gameActive) return;
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+    </script>
+</body>
+</html>

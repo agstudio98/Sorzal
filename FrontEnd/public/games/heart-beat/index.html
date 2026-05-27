@@ -1,0 +1,33 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>HEART BEAT</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; font-family: sans-serif; }
+        canvas { display: block; }
+        #ui { position: absolute; top: 20px; left: 20px; color: #ef4444; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+    <div id="ui">Hits: <span id="s">0</span></div>
+    <canvas id="c"></canvas>
+    <script>
+        const c = document.getElementById('c'), ctx = c.getContext('2d');
+        c.width = window.innerWidth; c.height = window.innerHeight;
+        let score = 0, tx = Math.random()*c.width, ty = Math.random()*c.height;
+        c.onclick = e => {
+            if(Math.hypot(e.clientX-tx, e.clientY-ty) < 40) {
+                score++; document.getElementById('s').innerText = score;
+                tx = Math.random()*(c.width-80)+40; ty = Math.random()*(c.height-80)+40;
+            }
+        };
+        function loop() {
+            ctx.fillStyle = 'rgba(0,0,0,0.1)'; ctx.fillRect(0,0,c.width,c.height);
+            ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(tx, ty, 40, 0, 7); ctx.fill();
+            requestAnimationFrame(loop);
+        }
+        loop();
+    </script>
+</body>
+</html>

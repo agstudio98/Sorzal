@@ -1,0 +1,39 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GHOST RUN</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; font-family: sans-serif; }
+        canvas { display: block; }
+        #ui { position: absolute; top: 20px; left: 20px; color: #a5b4fc; text-transform: uppercase; }
+        #go { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; text-align: center; display: none; }
+        button { background: #a5b4fc; border: none; padding: 10px 20px; color: black; cursor: pointer; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div id="ui">Score: <span id="s">0</span></div>
+    <div id="go"><h1>GAME OVER</h1><button onclick="location.reload()">RESTART</button></div>
+    <canvas id="c"></canvas>
+    <script>
+        const c = document.getElementById('c'), ctx = c.getContext('2d');
+        c.width = window.innerWidth; c.height = window.innerHeight;
+        let score = 0, active = true, py = c.height/2, obs = [];
+        window.onmousemove = e => py = e.clientY;
+        function loop() {
+            if(!active) return;
+            score++; document.getElementById('s').innerText = score;
+            ctx.fillStyle = 'rgba(0,0,0,0.1)'; ctx.fillRect(0,0,c.width,c.height);
+            ctx.fillStyle = '#a5b4fc'; ctx.beginPath(); ctx.arc(100, py, 20, 0, 7); ctx.fill();
+            if(Math.random() < 0.05) obs.push({x: c.width, y: Math.random()*c.height, s: 20+Math.random()*30});
+            obs.forEach((o,i) => {
+                o.x -= 10; ctx.fillStyle = 'white'; ctx.fillRect(o.x, o.y, o.s, o.s);
+                if(o.x < 150 && o.x > 50 && py > o.y && py < o.y + o.s) { active = false; document.getElementById('go').style.display='block'; }
+                if(o.x < -50) obs.splice(i,1);
+            });
+            requestAnimationFrame(loop);
+        }
+        loop();
+    </script>
+</body>
+</html>

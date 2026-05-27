@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Nebula Runner - Sorzal Edition</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Staatliches', sans-serif; }
+        canvas { display: block; }
+        #ui {
+            position: absolute; top: 20px; left: 20px; color: #0EA5E9;
+            text-transform: uppercase; letter-spacing: 2px; pointer-events: none;
+        }
+        .score-box { font-size: 24px; text-shadow: 0 0 10px #0EA5E9; }
+        #game-over {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: white; text-align: center; display: none; pointer-events: all;
+        }
+        button {
+            background: #0EA5E9; border: none; padding: 15px 30px; color: white;
+            font-size: 20px; cursor: pointer; border-radius: 10px; margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        <div class="score-box">Distancia: <span id="score">0</span>m</div>
+    </div>
+    <div id="game-over">
+        <h1>MISIÓN FALLIDA</h1>
+        <p>Tu nave se desintegró en la nebulosa.</p>
+        <button onclick="resetGame()">REINTENTAR</button>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        const gameOverEl = document.getElementById('game-over');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let score = 0;
+        let gameActive = true;
+        let speed = 5;
+
+        const player = {
+            x: 100, y: canvas.height / 2,
+            size: 30, color: '#0EA5E9'
+        };
+
+        let obstacles = [];
+        let particles = [];
+
+        function createObstacle() {
+            const size = Math.random() * 50 + 20;
+            obstacles.push({
+                x: canvas.width + size,
+                y: Math.random() * (canvas.height - size),
+                size: size,
+                speed: Math.random() * 3 + speed
+            });
+        }
+
+        function drawPlayer() {
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = player.color;
+            ctx.fillStyle = player.color;
+            // Forma de nave/triángulo
+            ctx.beginPath();
+            ctx.moveTo(player.x + player.size, player.y);
+            ctx.lineTo(player.x - player.size/2, player.y - player.size/2);
+            ctx.lineTo(player.x - player.size/2, player.y + player.size/2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+
+        function update() {
+            if (!gameActive) return;
+
+            score++;
+            scoreEl.innerText = score;
+            if (score % 500 === 0) speed += 0.5;
+
+            // Mover jugador suavemente hacia el mouse
+            const targetY = mouseY || canvas.height / 2;
+            player.y += (targetY - player.y) * 0.1;
+
+            // Obstáculos
+            if (Math.random() < 0.03) createObstacle();
+
+            obstacles.forEach((obs, index) => {
+                obs.x -= obs.speed;
+                
+                // Colisión
+                const dx = player.x - obs.x;
+                const dy = player.y - obs.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < (player.size/2 + obs.size/2)) {
+                    endGame();
+                }
+
+                if (obs.x + obs.size < 0) obstacles.splice(index, 1);
+            });
+        }
+
+        function draw() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)'; // Rastro
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Estrellas de fondo
+            ctx.fillStyle = 'white';
+            for(let i=0; i<5; i++) {
+                ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 1, 1);
+            }
+
+            drawPlayer();
+
+            obstacles.forEach(obs => {
+                ctx.fillStyle = '#334155';
+                ctx.beginPath();
+                ctx.arc(obs.x, obs.y, obs.size / 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#0EA5E9';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+        }
+
+        let mouseY = canvas.height / 2;
+        window.addEventListener('mousemove', e => {
+            mouseY = e.clientY;
+        });
+
+        function endGame() {
+            gameActive = false;
+            gameOverEl.style.display = 'block';
+        }
+
+        function resetGame() {
+            score = 0;
+            speed = 5;
+            obstacles = [];
+            gameActive = true;
+            gameOverEl.style.display = 'none';
+            loop();
+        }
+
+        function loop() {
+            if (!gameActive) return;
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>

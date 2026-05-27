@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Pulse Dash - Sorzal Edition</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #010A13; font-family: 'Staatliches', sans-serif; }
+        canvas { display: block; }
+        #ui {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            color: #38BDF8; text-align: center; pointer-events: none;
+        }
+        .score-box { font-size: 32px; text-shadow: 0 0 15px #38BDF8; letter-spacing: 4px; }
+        #game-over {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: white; text-align: center; display: none; pointer-events: all;
+            background: rgba(0,0,0,0.9); padding: 40px; border-radius: 30px; border: 2px solid #38BDF8;
+        }
+        button {
+            background: #38BDF8; border: none; padding: 15px 30px; color: #010A13;
+            font-size: 20px; cursor: pointer; border-radius: 10px; margin-top: 20px; font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        <div class="score-box">PULSO: <span id="score">0</span></div>
+        <div id="feedback" style="font-size: 18px; opacity: 0.8;">PREPARADO</div>
+    </div>
+    <div id="game-over">
+        <h1>DESINCROZINADO</h1>
+        <p>Has perdido el ritmo del sistema.</p>
+        <button onclick="resetGame()">RE-SINCRONIZAR</button>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        const feedbackEl = document.getElementById('feedback');
+        const gameOverEl = document.getElementById('game-over');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const keys = ['d', 'f', 'j', 'k'];
+        const colors = ['#38BDF8', '#0EA5E9', '#0EA5E9', '#38BDF8'];
+        let score = 0;
+        let gameActive = true;
+        let notes = [];
+        let missed = 0;
+        const targetY = canvas.height - 100;
+
+        function spawnNote() {
+            const lane = Math.floor(Math.random() * 4);
+            notes.push({
+                lane,
+                y: -50,
+                speed: 7 + (score / 200)
+            });
+        }
+
+        function checkHit(key) {
+            const lane = keys.indexOf(key.toLowerCase());
+            if (lane === -1) return;
+
+            const hitIndex = notes.findIndex(n => n.lane === lane && n.y > targetY - 50 && n.y < targetY + 50);
+            
+            if (hitIndex !== -1) {
+                const dist = Math.abs(notes[hitIndex].y - targetY);
+                if (dist < 20) {
+                    score += 10;
+                    feedbackEl.innerText = "PERFECTO!";
+                } else {
+                    score += 5;
+                    feedbackEl.innerText = "BIEN";
+                }
+                notes.splice(hitIndex, 1);
+                scoreEl.innerText = score;
+            }
+        }
+
+        function update() {
+            if (!gameActive) return;
+
+            if (Math.random() < 0.05) spawnNote();
+
+            notes.forEach((n, i) => {
+                n.y += n.speed;
+                if (n.y > canvas.height) {
+                    notes.splice(i, 1);
+                    missed++;
+                    feedbackEl.innerText = "FALLO";
+                    if (missed > 5) endGame();
+                }
+            });
+        }
+
+        function draw() {
+            ctx.fillStyle = '#010A13';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Carriles
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.1)';
+            for(let i=1; i<4; i++) {
+                const x = (canvas.width / 4) * i;
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+            }
+
+            // Receptores
+            keys.forEach((key, i) => {
+                const x = (canvas.width / 4) * i + (canvas.width / 8);
+                ctx.strokeStyle = colors[i];
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(x, targetY, 40, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.fillStyle = 'white';
+                ctx.textAlign = 'center';
+                ctx.font = '20px Staatliches';
+                ctx.fillText(key.toUpperCase(), x, targetY + 10);
+            });
+
+            // Notas
+            notes.forEach(n => {
+                const x = (canvas.width / 4) * n.lane + (canvas.width / 8);
+                ctx.fillStyle = colors[n.lane];
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = colors[n.lane];
+                ctx.beginPath();
+                ctx.arc(x, n.y, 30, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            });
+        }
+
+        window.addEventListener('keydown', e => checkHit(e.key));
+
+        function endGame() {
+            gameActive = false;
+            gameOverEl.style.display = 'block';
+        }
+
+        function resetGame() {
+            score = 0;
+            missed = 0;
+            notes = [];
+            gameActive = true;
+            scoreEl.innerText = score;
+            feedbackEl.innerText = "PREPARADO";
+            gameOverEl.style.display = 'none';
+            loop();
+        }
+
+        function loop() {
+            if (!gameActive) return;
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+        window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    </script>
+</body>
+</html>

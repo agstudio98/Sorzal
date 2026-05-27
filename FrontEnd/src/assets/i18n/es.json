@@ -1,0 +1,20 @@
+{
+  "NAVBAR": {
+    "HOME": "Inicio",
+    "CATALOG": "Catálogo",
+    "LOGIN": "Iniciar Sesión",
+    "LOGOUT": "Cerrar Sesión",
+    "LOCATE_US": "Localízanos"
+  },
+  "HOME": {
+    "MAIN_TITLE": "SORZAL",
+    "SLOGAN": "El cielo donde todo encaja",
+    "WHO_WE_ARE": "¿Quiénes somos?",
+    "GET_STARTED": "Probar Parejas",
+    "GAMES": "Probar Juegos"
+  },
+  "SUPPORT": {
+    "TITLE": "Soporte",
+    "PLACEHOLDER": "Escribe tu mensaje..."
+  }
+}

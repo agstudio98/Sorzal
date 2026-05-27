@@ -1,0 +1,39 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GRAVITY SHIFT</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; font-family: sans-serif; }
+        canvas { display: block; }
+        #ui { position: absolute; top: 20px; left: 20px; color: #2dd4bf; text-transform: uppercase; }
+        #go { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; text-align: center; display: none; }
+        button { background: #2dd4bf; border: none; padding: 10px 20px; color: black; cursor: pointer; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div id="ui">Time: <span id="s">0</span></div>
+    <div id="go"><h1>ELIMINATED</h1><button onclick="location.reload()">RESTART</button></div>
+    <canvas id="c"></canvas>
+    <script>
+        const c = document.getElementById('c'), ctx = c.getContext('2d');
+        c.width = window.innerWidth; c.height = window.innerHeight;
+        let score = 0, active = true, px = c.width/2, py = c.height/2, bullets = [];
+        window.onmousemove = e => { px = e.clientX; py = e.clientY; };
+        function loop() {
+            if(!active) return;
+            score++; document.getElementById('s').innerText = Math.floor(score/60);
+            ctx.fillStyle = 'rgba(0,0,0,0.1)'; ctx.fillRect(0,0,c.width,c.height);
+            ctx.fillStyle = '#2dd4bf'; ctx.beginPath(); ctx.arc(px, py, 15, 0, 7); ctx.fill();
+            if(Math.random() < 0.1) bullets.push({x: Math.random()*c.width, y: 0, vx: (Math.random()-0.5)*10, vy: 5+Math.random()*5});
+            bullets.forEach((b,i) => {
+                b.x += b.vx; b.y += b.vy; ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(b.x, b.y, 5, 0, 7); ctx.fill();
+                if(Math.hypot(px-b.x, py-b.y) < 20) { active = false; document.getElementById('go').style.display='block'; }
+                if(b.y > c.height) bullets.splice(i,1);
+            });
+            requestAnimationFrame(loop);
+        }
+        loop();
+    </script>
+</body>
+</html>

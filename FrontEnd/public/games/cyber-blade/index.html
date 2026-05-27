@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Cyber Blade - Sorzal Edition</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #0F0510; font-family: 'Staatliches', sans-serif; }
+        canvas { display: block; }
+        #ui {
+            position: absolute; top: 20px; left: 20px; color: #FB7185;
+            text-transform: uppercase; letter-spacing: 2px; pointer-events: none;
+        }
+        .score-box { font-size: 24px; text-shadow: 0 0 10px #FB7185; }
+        #game-over {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: white; text-align: center; display: none; pointer-events: all;
+            background: rgba(0,0,0,0.9); padding: 40px; border-radius: 30px; border: 2px solid #FB7185;
+        }
+        button {
+            background: #FB7185; border: none; padding: 15px 30px; color: white;
+            font-size: 20px; cursor: pointer; border-radius: 10px; margin-top: 20px; font-weight: bold;
+        }
+        #flash {
+            position: absolute; inset: 0; background: white; opacity: 0; pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        <div class="score-box">Drones Eliminados: <span id="score">0</span></div>
+    </div>
+    <div id="flash"></div>
+    <div id="game-over">
+        <h1>SISTEMA COMPROMETIDO</h1>
+        <p>Tu Cyber Blade se ha sobrecargado.</p>
+        <button onclick="resetGame()">REINICIAR NÚCLEO</button>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        const gameOverEl = document.getElementById('game-over');
+        const flashEl = document.getElementById('flash');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let score = 0;
+        let gameActive = true;
+        let drones = [];
+        let slashActive = 0;
+        const playerPos = { x: 150, y: canvas.height / 2 };
+
+        function spawnDrone() {
+            drones.push({
+                x: canvas.width + 50,
+                y: canvas.height / 2 + (Math.random() * 100 - 50),
+                speed: 8 + (score * 0.2),
+                size: 20
+            });
+        }
+
+        function triggerSlash() {
+            if (!gameActive) return;
+            slashActive = 10;
+            
+            let hit = false;
+            drones.forEach((d, i) => {
+                const dist = Math.abs(d.x - playerPos.x);
+                if (dist < 120) {
+                    drones.splice(i, 1);
+                    score++;
+                    scoreEl.innerText = score;
+                    hit = true;
+                }
+            });
+
+            if (hit) {
+                flashEl.style.opacity = '0.3';
+                setTimeout(() => flashEl.style.opacity = '0', 50);
+            }
+        }
+
+        function update() {
+            if (!gameActive) return;
+
+            if (Math.random() < 0.02) spawnDrone();
+
+            drones.forEach((d, i) => {
+                d.x -= d.speed;
+                if (d.x < playerPos.x - 20) {
+                    endGame();
+                }
+            });
+
+            if (slashActive > 0) slashActive--;
+        }
+
+        function draw() {
+            ctx.fillStyle = '#0F0510';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Fondo - Líneas de escaneo
+            ctx.strokeStyle = 'rgba(251, 113, 133, 0.05)';
+            for(let i=0; i<canvas.height; i+=20) {
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+            }
+
+            // Jugador / Blade
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#FB7185';
+            ctx.strokeStyle = '#FB7185';
+            ctx.lineWidth = 5;
+            
+            // Cuerpo
+            ctx.strokeRect(playerPos.x - 20, playerPos.y - 40, 40, 80);
+            
+            // Blade Effect
+            if (slashActive > 0) {
+                ctx.beginPath();
+                ctx.moveTo(playerPos.x + 20, playerPos.y - 100);
+                ctx.lineTo(playerPos.x + 150, playerPos.y);
+                ctx.lineTo(playerPos.x + 20, playerPos.y + 100);
+                ctx.stroke();
+                ctx.fillStyle = 'rgba(251, 113, 133, 0.2)';
+                ctx.fill();
+            }
+
+            // Drones
+            drones.forEach(d => {
+                ctx.fillStyle = '#E11D48';
+                ctx.shadowColor = '#E11D48';
+                ctx.beginPath();
+                ctx.arc(d.x, d.y, d.size, 0, Math.PI * 2);
+                ctx.fill();
+                // Ojo del drone
+                ctx.fillStyle = 'white';
+                ctx.fillRect(d.x - 5, d.y - 5, 10, 10);
+            });
+
+            ctx.shadowBlur = 0;
+        }
+
+        function endGame() {
+            gameActive = false;
+            gameOverEl.style.display = 'block';
+        }
+
+        function resetGame() {
+            score = 0;
+            scoreEl.innerText = score;
+            drones = [];
+            gameActive = true;
+            gameOverEl.style.display = 'none';
+            loop();
+        }
+
+        window.addEventListener('keydown', e => { if(e.code === 'Space') triggerSlash(); });
+        window.addEventListener('mousedown', triggerSlash);
+
+        function loop() {
+            if (!gameActive) return;
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+    </script>
+</body>
+</html>
