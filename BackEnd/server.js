@@ -38,7 +38,7 @@ if (process.env.NODE_ENV === 'production' || true) { // Force for now as per use
   app.use(express.static(frontendPath));
   
   // All other routes should serve the frontend's index.html
-  app.get('/:path*', (req, res, next) => {
+  app.get('{/*path}', (req, res, next) => {
     if (req.path.startsWith('/api')) return next();
     if (req.path.startsWith('/uploads')) return next();
     res.sendFile(path.join(frontendPath, 'index.html'));
