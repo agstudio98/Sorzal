@@ -70,7 +70,7 @@ export default class App extends Component<{}, AppState> {
   login = (userData: any) => {
     localStorage.setItem('user', JSON.stringify(userData));
     this.setState({ user: userData });
-    this.showNotification(`¡Bienvenido, ${userData.name}!`, 'success');
+    this.showNotification(`¡Bienvenido, ${userData?.name || 'Usuario'}!`, 'success');
   };
 
   logout = () => {

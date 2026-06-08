@@ -338,7 +338,7 @@ export default class Home extends Component<{ user: any; updateUser?: (data: any
                 type="text"
                 value={newPostContent}
                 onChange={e => this.setState({ newPostContent: e.target.value })}
-                placeholder={`¿Qué pieza falta hoy, ${user.name.split(' ')[0]}?`}
+                placeholder={`¿Qué pieza falta hoy, ${(user.name || 'Usuario').split(' ')[0]}?`}
                 className="flex-1 bg-white/5 border-2 border-primary-light/20 rounded-2xl p-4 body outline-none focus:border-primary-light transition-all italic"
               />
               <button 
