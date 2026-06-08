@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -30,6 +31,19 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Static Files
 app.use('/uploads', express.static('uploads'));
+
+// Serve Frontend in production
+if (process.env.NODE_ENV === 'production' || true) { // Force for now as per user request to run from backend URL
+  const frontendPath = path.join(__dirname, '../FrontEnd/dist');
+  app.use(express.static(frontendPath));
+  
+  // All other routes should serve the frontend's index.html
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    if (req.path.startsWith('/uploads')) return next();
+    res.sendFile(path.join(frontendPath, 'index.html'));
+  });
+}
 
 // Health Check
 app.get('/api/health', (req, res) => {

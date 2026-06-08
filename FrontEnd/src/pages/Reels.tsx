@@ -87,7 +87,7 @@ class ReelsPageBase extends Component<ReelsProps, ReelsState> {
       const reels = await fetchReels();
       if (!Array.isArray(reels)) throw new Error('Invalid reels data');
       
-      this.videoRefs = reels.map(() => createRef<HTMLVideoElement>());
+      (this as any).videoRefs = reels.map(() => createRef<HTMLVideoElement>());
       this.setState({ 
         reels, 
         loading: false, 
@@ -528,7 +528,7 @@ class ReelsPageBase extends Component<ReelsProps, ReelsState> {
             onClose={() => this.setState({ showUploadModal: false })}
             onSuccess={this.handleUploadSuccess}
             showNotification={this.props.showNotification || (() => {})}
-            t={t}
+            t={t as any}
           />
         )}
       </main>

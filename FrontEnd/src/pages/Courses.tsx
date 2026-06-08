@@ -29,6 +29,7 @@ interface CoursesPageProps {
 
 export const CoursesPage: React.FC<CoursesPageProps> = ({ showNotification }) => {
   const { t } = useTranslation();
+  const location = useLocation() as any;
   const [courses, setCourses] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);

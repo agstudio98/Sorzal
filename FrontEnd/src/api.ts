@@ -1,4 +1,14 @@
-const API_BASE_URL = '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 
+                     (typeof window !== 'undefined' && window.location.hostname === 'localhost' 
+                      ? 'http://localhost:5000/api' 
+                      : 'https://sorzal-backend.onrender.com/api');
+const ASSET_BASE_URL = API_BASE_URL.replace('/api', '');
+
+export const getAssetUrl = (path: string) => {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  return `${ASSET_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
+};
 
 export const fetchProducts = async (pageNumber = 1, keyword = '', category = '', isMarket = false) => {
   try {

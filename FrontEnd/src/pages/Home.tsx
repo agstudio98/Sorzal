@@ -289,7 +289,7 @@ export default class Home extends Component<{ user: any; updateUser?: (data: any
             {/* Stories Slider */}
             <div className="relative group">
               <div 
-                ref={el => this.storyScrollRef.current = el}
+                ref={(el) => { (this.storyScrollRef as any).current = el; }}
                 className="flex gap-4 overflow-x-auto no-scrollbar pb-2 -mx-2 px-2 scroll-smooth snap-x snap-mandatory"
               >
                 <div className="flex-shrink-0 w-[calc(20%-13px)] aspect-[2/3] glass-card relative overflow-hidden group/add cursor-pointer border-dashed border-primary-light/40 border-2 flex flex-col items-center justify-end pb-4 gap-2 snap-start">
@@ -355,7 +355,7 @@ export default class Home extends Component<{ user: any; updateUser?: (data: any
               <div className="flex justify-between items-center px-2">
                  <h2 className="title text-3xl uppercase tracking-tighter text-primary-dark dark:text-white">El <span className="text-primary-light italic">Muro</span></h2>
                  <div className="flex gap-4">
-                    <button onClick={this.loadPosts} className="text-[10px] font-bold uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity">Refrescar</button>
+                    <button onClick={() => this.loadPosts()} className="text-[10px] font-bold uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity">Refrescar</button>
                  </div>
               </div>
 

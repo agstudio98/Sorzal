@@ -595,7 +595,7 @@ interface ForumState {
                                </div>
                              ) : (
                                <p className="body text-base text-primary-dark/90 dark:text-slate-200 leading-relaxed mb-4 whitespace-pre-wrap">
-                                  {t('FORUM.CONTENT.COMMENTS.' + comment.content, comment.content)}
+                                  {t('FORUM.CONTENT.COMMENTS.' + comment.content, comment.content) as any}
                                </p>
                              )}
                              <div className="flex items-center gap-6 text-[10px] font-bold uppercase tracking-widest">
@@ -678,7 +678,7 @@ interface ForumState {
                                         </div>
                                       ) : (
                                         <p className="body text-sm text-primary-dark/80 dark:text-slate-300 leading-relaxed mb-3 whitespace-pre-wrap">
-                                           {t('FORUM.CONTENT.COMMENTS.' + reply.content, reply.content)}
+                                           {t('FORUM.CONTENT.COMMENTS.' + reply.content, reply.content) as any}
                                         </p>
                                       )}
                                       

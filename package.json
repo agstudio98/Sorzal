@@ -1,0 +1,10 @@
+{
+  "name": "sorzal-root",
+  "private": true,
+  "scripts": {
+    "install:all": "cd FrontEnd && pnpm install && cd ../BackEnd && npm install",
+    "build:frontend": "cd FrontEnd && pnpm build",
+    "start:backend": "cd BackEnd && npm start",
+    "dev:backend": "cd BackEnd && npm run dev"
+  }
+}

@@ -456,7 +456,7 @@ class PhotographyPageBase extends Component<PhotographyProps, PhotographyState> 
               onClose={() => this.setState({ showUploadModal: false })}
               onSuccess={this.handleUploadSuccess}
               showNotification={this.props.showNotification}
-              t={t}
+              t={t as any}
             />
           )}
         </div>
